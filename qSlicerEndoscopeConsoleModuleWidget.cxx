@@ -23,10 +23,16 @@
 #include "ui_qSlicerEndoscopeConsoleModuleWidget.h"
 
 // SlicerQt includes
+#include "qSlicerApplication.h"
+#include "qSlicerLayoutManager.h"
 #include "qSlicerWidget.h"
 
 // QVTK includes
 #include <QVTKWidget.h>
+
+// qMRMLWidget includes
+#include "qMRMLThreeDView.h"
+#include "qMRMLThreeDWidget.h"
 
 // Qt includes
 #include <QApplication>
@@ -35,6 +41,11 @@
 #include <QVBoxLayout>
 #include <QProcessEnvironment>
 #include <QWebView>
+
+// VTK includes
+#include <vtkNew.h>
+#include "vtkMRMLScalarVolumeDisplayNode.h"
+#include "vtkMRMLSliceNode.h"
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
@@ -184,13 +195,25 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
                 
                 
                 // Reffered qSlicerWidgetTest2.cxx
-                qSlicerWidget* widget = new qSlicerWidget();
+                //qSlicerWidget* widget = new qSlicerWidget();
                 //widget->setParent(&parentWidget);
 
+                // test; code from setup() function in qSlicerColorsModuleWidget.cxx
+                qSlicerApplication *  app = qSlicerApplication::application();
+                qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
+                vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
+
                 QVTKWidget* vtkWidget = new QVTKWidget();
+                //vtkMRMLSliceNode *sliceNode = this->GetSliceNode();
+                //vtkMRMLScalarVolumeNode* volumeNode =
+                
+                //vtkMRMLScalarVolumeNode::SafeDownCast( this->GetLayerVolumeNode (0) );
+                
                 //vtkWidget->setParent(&parentWidget);
                 //vbox.addWidget(vtkWidget);
                 //vtkWidget->GetRenderWindow()->Render();
+                
+                //vtkImageData test = this->GetBackgroundImageData();
 
                 //vtkSlicerViewerWidget* vwidget = this->GetApplicationGUI()->GetNthViewerWidget(0);
                 
