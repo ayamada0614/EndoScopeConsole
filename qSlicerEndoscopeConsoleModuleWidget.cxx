@@ -202,8 +202,18 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
                 qSlicerApplication *  app = qSlicerApplication::application();
                 qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
                 vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
-
-                QVTKWidget* vtkWidget = new QVTKWidget();
+                
+                vtkRenderWindow* activeRenderWindow = vtkRenderWindow::New();
+                activeRenderWindow = activeRenderer->GetRenderWindow();
+                
+                //QVTKWidget* vtkWidget = new QVTKWidget();
+                //vtkWidget->SetRenderWindow(activeRenderWindow);
+                
+                vtkRenderer* BackgroundRenderer2 = vtkRenderer::New();
+                activeRenderWindow->AddRenderer(BackgroundRenderer2);
+                
+                //vtkWidget->SetRenderer(threeDView);
+                
                 //vtkMRMLSliceNode *sliceNode = this->GetSliceNode();
                 //vtkMRMLScalarVolumeNode* volumeNode =
                 
