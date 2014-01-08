@@ -89,7 +89,7 @@ void qSlicerEndoscopeConsoleModuleWidget::setup()
   this->imageSize.width = 0;
   this->imageSize.height = 0;
     
-  this->VideoImageData     = NULL;
+  this->VideoImageData = NULL;
     
 }
 
@@ -136,6 +136,19 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         IplImage* captureImageTmp = NULL;
         CvSize   newImageSize;
         
+        if (!this->VideoImageData)
+        {
+            this->VideoImageData = vtkImageData::New();
+            this->VideoImageData->SetDimensions(64, 64, 1);
+            this->VideoImageData->SetExtent(0, 63, 0, 63, 0, 0 );
+            this->VideoImageData->SetSpacing(1.0, 1.0, 1.0);
+            this->VideoImageData->SetOrigin(0.0, 0.0, 0.0);
+            this->VideoImageData->SetNumberOfScalarComponents(3);
+            this->VideoImageData->SetScalarTypeToUnsignedChar();
+            this->VideoImageData->AllocateScalars();
+        }
+        this->VideoImageData->Update();
+        
         // VTK/Qt wedded
         //this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(BackgroundRenderer);
         
@@ -155,7 +168,7 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
             if (newImageSize.width != this->imageSize.width ||
                 newImageSize.height != this->imageSize.height)
             {
-                /*
+                
                 this->imageSize.width = newImageSize.width;
                 this->imageSize.height = newImageSize.height;
                 this->captureImage = cvCreateImage(this->imageSize, IPL_DEPTH_8U,3);
@@ -185,7 +198,7 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
                 //ViewerBackgroundOn(this->VideoImageData);
                 
                 //ViewerBackgroundOn(vwidget, this->VideoImageData);
-                */
+                
             }
 
         }
