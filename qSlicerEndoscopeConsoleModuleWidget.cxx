@@ -196,7 +196,7 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
                 qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
                 vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
                 
-                ViewerBackgroundOff(activeRenderer);
+                //ViewerBackgroundOff(activeRenderer);
                 ViewerBackgroundOn(activeRenderer, this->VideoImageData);
                 
             }
@@ -214,7 +214,7 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         //    char c = cvWaitKey(33);
         //    if( c == 27 /* esc key */ /*|| this->timerFlag > 10 /* for test */) break;
         //}
-        while(this->timerFlag < 10);
+        //while(this->timerFlag < 10);
             
         d->VideoON->setChecked(false);
         d->VideoOFF->setChecked(true);
@@ -237,6 +237,7 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOn(vtkRenderer* activeR
 
     if (activeRenderer)
     {
+        
         // VTK Renderer
         this->BackgroundActor = vtkImageActor::New();
         this->BackgroundActor->SetInput(imageData);
@@ -245,19 +246,18 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOn(vtkRenderer* activeR
         this->BackgroundRenderer->AddActor(this->BackgroundActor);
         this->BackgroundRenderer->InteractiveOff();
         this->BackgroundRenderer->SetLayer(0);
-
-        // Adjust camera position so that image covers the draw area.
-    
+        
         this->BackgroundActor->Modified();
-        //activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        activeRenderWindow->AddRenderer(this->BackgroundRenderer);
         activeRenderer->Render();
-    
+        
+        // Adjust camera position so that image covers the draw area.
         vtkCamera* camera = this->BackgroundRenderer->GetActiveCamera();
         double x, y, z;
         camera->GetPosition(x, y, z);
         camera->SetViewAngle(90.0);
         camera->SetPosition(x, y, y);
-
+        
         // The following code fixes a issue that
         // video doesn't show up on the viewer.
         /*
@@ -283,8 +283,8 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOff(vtkRenderer* active
     
     if (activeRenderer)
     {
-        //activeRenderWindow->AddRenderer(this->BackgroundRenderer);
-        //activeRenderer->Render();
+        activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        activeRenderer->Render();
         
         this->BackgroundRenderer = NULL;
         this->BackgroundActor = NULL;
