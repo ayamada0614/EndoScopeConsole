@@ -176,7 +176,6 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
     
     if(checked)
     {
-
         // QTimer start
         if( t->isActive())
             t->stop();
@@ -185,112 +184,15 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         
         this->StartCamera(0, NULL);
 
-        /*
-        qSlicerApplication *  app = qSlicerApplication::application();
-
-        // StartCamera
-        CvCapture* capture;
-        this->imageSize.width = 0;
-        this->imageSize.height = 0;
-        
-        // Open /dev/video0
-        capture = cvCaptureFromCAM(0);
-        
-        assert( capture != NULL);
-        
-        // QTimer start
-        if( t->isActive())
-            t->stop();
-        this->timerFlag = 0;
-        t->start(1000); // 1s
-        
-        // ---------------------------------------------------------
-        // Set up
-        IplImage* captureImageTmp = NULL;
-        CvSize   newImageSize;
-        
-        if (!this->VideoImageData)
-        {
-            this->VideoImageData = vtkImageData::New();
-            this->VideoImageData->SetDimensions(64, 64, 1);
-            this->VideoImageData->SetExtent(0, 63, 0, 63, 0, 0 );
-            this->VideoImageData->SetSpacing(1.0, 1.0, 1.0);
-            this->VideoImageData->SetOrigin(0.0, 0.0, 0.0);
-            this->VideoImageData->SetNumberOfScalarComponents(3);
-            this->VideoImageData->SetScalarTypeToUnsignedChar();
-            this->VideoImageData->AllocateScalars();
-        }
-        this->VideoImageData->Update();
-        
-        if (capture)
-        {
-            if(NULL == (captureImageTmp = cvQueryFrame( capture )))
-            {
-                fprintf(stdout, "\n\nCouldn't take a picture\n\n");
-                return;
-            }
-            
-            newImageSize = cvGetSize( captureImageTmp );
-            
-            // check if the image size is changed
-            if (newImageSize.width != this->imageSize.width ||
-                newImageSize.height != this->imageSize.height)
-            {
-                
-                this->imageSize.width = newImageSize.width;
-                this->imageSize.height = newImageSize.height;
-                this->captureImage = cvCreateImage(this->imageSize, IPL_DEPTH_8U,3);
-                this->RGBImage = cvCreateImage(imageSize, IPL_DEPTH_8U, 3);
-                this->undistortionImage = cvCreateImage( this->imageSize, IPL_DEPTH_8U, 3);
-                
-                this->VideoImageData->SetDimensions(newImageSize.width, newImageSize.height, 1);
-                this->VideoImageData->SetExtent(0, newImageSize.width-1, 0, newImageSize.height-1, 0, 0 );
-                this->VideoImageData->SetNumberOfScalarComponents(3);
-                this->VideoImageData->SetScalarTypeToUnsignedChar();
-                this->VideoImageData->AllocateScalars();
-                this->VideoImageData->Update();
-                
-                qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
-                vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
-                
-                //ViewerBackgroundOff(activeRenderer);
-                ViewerBackgroundOn(activeRenderer, this->VideoImageData);
-                
-            }
-
-        }
-        // ---------------------------------------------------------
-
-        //while( ((bgr_frame = cvQueryFrame( capture )) != NULL) && checked)
-        //{
-            // video image process
-            //this->cameraHandler();
-            
-            // Display image on OpenCV window
-            //cvShowImage( "Endoscope Viewer", bgr_frame);
-        //    char c = cvWaitKey(33);
-        //    if( c == 27 ) break;
-        //}
-        //while(this->timerFlag < 10);
-            
-        d->VideoON->setChecked(false);
-        d->VideoOFF->setChecked(true);
-        
-        // Qtimer stop
-        t->stop();
-        
-        cvReleaseCapture(&capture);
-        //cvDestroyWindow( "Endoscope Viewer" );
-         */
     }
     else
     {
         this->StopCamera();
-        // Qtimer stop
         if(this->capture)
         {
             cvReleaseCapture(&this->capture);
         }
+        // Qtimer stop
         if( t->isActive())
             t->stop();
     }
