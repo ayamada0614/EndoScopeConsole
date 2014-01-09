@@ -79,15 +79,18 @@ public:
   qSlicerEndoscopeConsoleModuleWidget(QWidget *parent=0);
   virtual ~qSlicerEndoscopeConsoleModuleWidget();
     
-  //void cameraHandler();
   int ViewerBackgroundOff(vtkRenderer* activeRenderer);
   int ViewerBackgroundOn(vtkRenderer* activeRenderer, vtkImageData* imageData);
-  
+  int StartCamera(int channel, const char* path);
+  int StopCamera();
+  int CameraHandler();
+    
   // for timer loop to refresh obtained video images
   QTimer *t;
-  int timerFlag; // for test
+  int timerFlag;
   
   // video import
+  CvCapture* capture;
   CvSize imageSize;
   IplImage* RGBImage;
   IplImage* undistortionImage;
