@@ -161,6 +161,15 @@ int qSlicerEndoscopeConsoleModuleWidget::CameraHandler()
         {
             this->VideoImageData->Modified();
             this->BackgroundRenderer->GetRenderWindow()->Render();
+            
+            /*
+            qSlicerApplication *  app = qSlicerApplication::application();
+            qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
+            vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
+            activeRenderer->SetLayer(1);
+            activeRenderer->Render();
+            */
+            
         }
         
     }
