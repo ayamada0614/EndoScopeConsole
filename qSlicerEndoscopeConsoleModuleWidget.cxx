@@ -99,6 +99,8 @@ void qSlicerEndoscopeConsoleModuleWidget::timerIntrupt()
     if(this->timerFlag == 1)
     {
         this->CameraHandler();
+        // test viewer
+        //cvShowImage( "Endoscope Viewer", this->RGBImage);
     }
     
 }
@@ -148,8 +150,9 @@ int qSlicerEndoscopeConsoleModuleWidget::CameraHandler()
         }
 
         // Display video image
-        cvFlip(captureImageTmp, this->captureImage, 0);
-        cvCvtColor( this->captureImage, this->RGBImage, CV_BGR2RGB);
+        //cvFlip(captureImageTmp, this->captureImage, 0);
+        //cvCvtColor( this->captureImage, this->RGBImage, CV_BGR2RGB);
+        cvCvtColor(captureImageTmp, this->RGBImage, CV_BGR2RGB);
 
         unsigned char* idata;
         idata = (unsigned char*) RGBImage->imageData;
@@ -244,6 +247,11 @@ int qSlicerEndoscopeConsoleModuleWidget::StartCamera(int channel, const char* pa
         return 0;
     }
 
+    // test viewer
+    //this->bgr_frame = NULL;
+    //this->bgr_frame = cvQueryFrame( this->capture );
+    //cvNamedWindow( "Endoscope Viewer", CV_WINDOW_NORMAL);
+
     this->timerFlag = 1;
     
     if (!this->VideoImageData)
@@ -259,7 +267,7 @@ int qSlicerEndoscopeConsoleModuleWidget::StartCamera(int channel, const char* pa
     }
     this->VideoImageData->Update();
     this->ViewerBackgroundOn(activeRenderer, this->VideoImageData);
-
+    
     return 1;
     
 }
@@ -342,8 +350,11 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOff(vtkRenderer* active
     
     if (activeRenderer)
     {
-        activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        //activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        //activeRenderWindow->RemoveNthRenderer(1);
+        //activeRenderer->SetLayer(0);
         activeRenderer->Render();
+        
         
         this->BackgroundRenderer = NULL;
         this->BackgroundActor = NULL;
