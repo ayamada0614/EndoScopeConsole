@@ -149,7 +149,7 @@ int qSlicerEndoscopeConsoleModuleWidget::CameraHandler()
 
         // Display video image
         cvFlip(captureImageTmp, this->captureImage, 0);
-        cvCvtColor( captureImage, RGBImage, CV_BGR2RGB);
+        cvCvtColor( this->captureImage, this->RGBImage, CV_BGR2RGB);
 
         unsigned char* idata;
         idata = (unsigned char*) RGBImage->imageData;
@@ -192,6 +192,7 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         {
             cvReleaseCapture(&this->capture);
         }
+        this->timerFlag = 0;
         // Qtimer stop
         if( t->isActive())
             t->stop();
@@ -306,7 +307,6 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOn(vtkRenderer* activeR
         camera->GetPosition(x, y, z);
         camera->SetViewAngle(90.0);
         camera->SetPosition(x, y, y);
-        
         
         // The following code fixes a issue that
         // video doesn't show up on the viewer.
