@@ -37,10 +37,6 @@
 // Qt includes
 #include <QApplication>
 #include <QTimer>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QProcessEnvironment>
-#include <QWebView>
 
 // VTK includes
 #include <vtkNew.h>
@@ -97,6 +93,7 @@ void qSlicerEndoscopeConsoleModuleWidget::setup()
   this->captureImage = NULL;
   this->RGBImage     = NULL;
   this->undistortionImage = NULL;
+    
   this->imageSize.width = 0;
   this->imageSize.height = 0;
     
@@ -121,13 +118,20 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
     
     if(checked)
     {
+
+        qSlicerApplication *  app = qSlicerApplication::application();
+
+        // StartCamera
         CvCapture* capture;
+        this->imageSize.width = 0;
+        this->imageSize.height = 0;
         
         // Open /dev/video0
         capture = cvCaptureFromCAM(0);
         
         assert( capture != NULL);
         
+        /*
         cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 240);
         cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 320);
         cvSetCaptureProperty(capture, CV_CAP_PROP_FPS,30);
@@ -135,6 +139,7 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         IplImage* bgr_frame = cvQueryFrame( capture );
         
         cvNamedWindow( "Endoscope Viewer", CV_WINDOW_NORMAL);
+        */
         
         // QTimer start
         if( t->isActive())
@@ -160,10 +165,6 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         }
         this->VideoImageData->Update();
         
-        // VTK/Qt wedded
-        //this->ui->qvtkWidget->GetRenderWindow()->AddRenderer(BackgroundRenderer);
-        
-
         if (capture)
         {
             if(NULL == (captureImageTmp = cvQueryFrame( capture )))
@@ -173,7 +174,6 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
             }
             
             newImageSize = cvGetSize( captureImageTmp );
-
             
             // check if the image size is changed
             if (newImageSize.width != this->imageSize.width ||
@@ -193,61 +193,29 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
                 this->VideoImageData->AllocateScalars();
                 this->VideoImageData->Update();
                 
-                
-                // Reffered qSlicerWidgetTest2.cxx
-                //qSlicerWidget* widget = new qSlicerWidget();
-                //widget->setParent(&parentWidget);
-
-                // test; code from setup() function in qSlicerColorsModuleWidget.cxx
-                qSlicerApplication *  app = qSlicerApplication::application();
                 qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
                 vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
                 
-                vtkRenderWindow* activeRenderWindow = vtkRenderWindow::New();
-                activeRenderWindow = activeRenderer->GetRenderWindow();
-                
-                //QVTKWidget* vtkWidget = new QVTKWidget();
-                //vtkWidget->SetRenderWindow(activeRenderWindow);
-                
-                vtkRenderer* BackgroundRenderer2 = vtkRenderer::New();
-                activeRenderWindow->AddRenderer(BackgroundRenderer2);
-                
-                //vtkWidget->SetRenderer(threeDView);
-                
-                //vtkMRMLSliceNode *sliceNode = this->GetSliceNode();
-                //vtkMRMLScalarVolumeNode* volumeNode =
-                
-                //vtkMRMLScalarVolumeNode::SafeDownCast( this->GetLayerVolumeNode (0) );
-                
-                //vtkWidget->setParent(&parentWidget);
-                //vbox.addWidget(vtkWidget);
-                //vtkWidget->GetRenderWindow()->Render();
-                
-                //vtkImageData test = this->GetBackgroundImageData();
-
-                //vtkSlicerViewerWidget* vwidget = this->GetApplicationGUI()->GetNthViewerWidget(0);
-                
-                //ViewerBackgroundOff(vwidget);
-                //ViewerBackgroundOn(this->VideoImageData);
-                
-                //ViewerBackgroundOn(vwidget, this->VideoImageData);
+                ViewerBackgroundOff(activeRenderer);
+                ViewerBackgroundOn(activeRenderer, this->VideoImageData);
                 
             }
 
         }
         // ---------------------------------------------------------
 
-        while( ((bgr_frame = cvQueryFrame( capture )) != NULL) && checked)
-        {
+        //while( ((bgr_frame = cvQueryFrame( capture )) != NULL) && checked)
+        //{
             // video image process
             //this->cameraHandler();
             
             // Display image on OpenCV window
-            cvShowImage( "Endoscope Viewer", bgr_frame);
-            char c = cvWaitKey(33);
-            if( c == 27 /* esc key */ /*|| this->timerFlag > 10 /* for test */) break;
-        }
-        
+            //cvShowImage( "Endoscope Viewer", bgr_frame);
+        //    char c = cvWaitKey(33);
+        //    if( c == 27 /* esc key */ /*|| this->timerFlag > 10 /* for test */) break;
+        //}
+        while(this->timerFlag < 10);
+            
         d->VideoON->setChecked(false);
         d->VideoOFF->setChecked(true);
         
@@ -255,96 +223,73 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         t->stop();
         
         cvReleaseCapture(&capture);
-        cvDestroyWindow( "Endoscope Viewer" );
+        //cvDestroyWindow( "Endoscope Viewer" );
     }
 }
 
 
 //-----------------------------------------------------------------------------
-void qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOn(vtkImageData* imageData)
+int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOn(vtkRenderer* activeRenderer,vtkImageData* imageData)
 {
     Q_D(qSlicerEndoscopeConsoleModuleWidget);
     
-    //vtkKWRenderWidget* rwidget;
-    QVTKWidget* vtkWidget = new QVTKWidget(); // replace rwidget?
-    //vtkRenderWindow* rwindow;
+    vtkRenderWindow* activeRenderWindow = activeRenderer->GetRenderWindow();
 
-    if (1//vwidget&&
-        //(rwidget = vwidget->GetMainViewer()) &&
-        /*(rwindow = rwidget->GetRenderWindow())*/)
+    if (activeRenderer)
     {
-        //if (rwidget->GetNumberOfRenderers() == 1)
-        //{
-    
-            // VTK Renderer
-            this->BackgroundActor = vtkImageActor::New();
-            this->BackgroundActor->SetInput(imageData);
+        // VTK Renderer
+        this->BackgroundActor = vtkImageActor::New();
+        this->BackgroundActor->SetInput(imageData);
 
-            this->BackgroundRenderer = vtkRenderer::New();
-            this->BackgroundRenderer->AddActor(this->BackgroundActor);
-            this->BackgroundRenderer->InteractiveOff();
-            this->BackgroundRenderer->SetLayer(0);
+        this->BackgroundRenderer = vtkRenderer::New();
+        this->BackgroundRenderer->AddActor(this->BackgroundActor);
+        this->BackgroundRenderer->InteractiveOff();
+        this->BackgroundRenderer->SetLayer(0);
 
-            // Adjust camera position so that image covers the draw area.
+        // Adjust camera position so that image covers the draw area.
     
-            this->BackgroundActor->Modified();
-            //rwidget->GetNthRenderer(0)->SetLayer(1);
-            //rwidget->AddRenderer(this->BackgroundRenderer);
-            vtkWidget->GetRenderWindow()->AddRenderer(this->BackgroundRenderer);
-            //rwindow->Render();
-            vtkWidget->GetRenderWindow()->Render(); //this->BackgroundRenderer->Render();
+        this->BackgroundActor->Modified();
+        //activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        activeRenderer->Render();
     
-            vtkCamera* camera = this->BackgroundRenderer->GetActiveCamera();
-            double x, y, z;
-            camera->GetPosition(x, y, z);
-            camera->SetViewAngle(90.0);
-            camera->SetPosition(x, y, y);
+        vtkCamera* camera = this->BackgroundRenderer->GetActiveCamera();
+        double x, y, z;
+        camera->GetPosition(x, y, z);
+        camera->SetViewAngle(90.0);
+        camera->SetPosition(x, y, y);
 
-            // The following code fixes a issue that
-            // video doesn't show up on the viewer.
-            /*
-             vtkCamera* fcamera = rwidget->GetNthRenderer(0)->GetActiveCamera();
-             if (fcamera)
-             {
-             fcamera->Modified();
-             }
-             */
-        //}
+        // The following code fixes a issue that
+        // video doesn't show up on the viewer.
+        /*
+        vtkCamera* fcamera = rwidget->GetNthRenderer(0)->GetActiveCamera();
+        if (fcamera)
+        {
+         fcamera->Modified();
+        }
+        */
     }
     
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOff(/*vtkSlicerViewerWidget* vwidget*/)
-{
-    Q_D(qSlicerEndoscopeConsoleModuleWidget);
-    
-    
-    //vtkKWRenderWidget* rwidget;
-    //vtkRenderWindow* rwindow;
-    QVTKWidget* vtkWidget = new QVTKWidget(); // replace rwidget?
-    
-    
-    if (1/*vwidget&&
-        (rwidget = vwidget->GetMainViewer()) &&
-        (rwindow = rwidget->GetRenderWindow())*/)
-    {
-        //if (rwidget->GetNumberOfRenderers() > 1)
-        //{
-            //rwidget->RemoveNthRenderer(1);
-            //rwidget->GetNthRenderer(0)->SetLayer(0);
-            vtkWidget->GetRenderWindow()->AddRenderer(this->BackgroundRenderer);
-            //rwindow->Render();
-            ////vtkWidget->GetRenderWindow()->Render();
-            vtkWidget->GetRenderWindow()->Render();
-    
-            this->BackgroundRenderer = NULL;
-            this->BackgroundActor = NULL;
-        //}
-    }
-    
-    /*
     return 0;
-    */
     
+}
+
+//-----------------------------------------------------------------------------
+int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOff(vtkRenderer* activeRenderer)
+{
+    Q_D(qSlicerEndoscopeConsoleModuleWidget);
+    
+    vtkRenderWindow* activeRenderWindow = activeRenderer->GetRenderWindow();
+    
+    
+    if (activeRenderer)
+    {
+        //activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        //activeRenderer->Render();
+        
+        this->BackgroundRenderer = NULL;
+        this->BackgroundActor = NULL;
+    }
+    
+    return 0;
+
 }

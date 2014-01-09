@@ -80,8 +80,8 @@ public:
   virtual ~qSlicerEndoscopeConsoleModuleWidget();
     
   //void cameraHandler();
-  void ViewerBackgroundOff(void);
-  void ViewerBackgroundOn(vtkImageData* imageData);
+  int ViewerBackgroundOff(vtkRenderer* activeRenderer);
+  int ViewerBackgroundOn(vtkRenderer* activeRenderer, vtkImageData* imageData);
   
   // for timer loop to refresh obtained video images
   QTimer *t;
