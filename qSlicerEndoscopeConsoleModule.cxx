@@ -91,7 +91,7 @@ QIcon qSlicerEndoscopeConsoleModule::icon()const
 //-----------------------------------------------------------------------------
 QStringList qSlicerEndoscopeConsoleModule::categories() const
 {
-  return QStringList() << "Examples";
+  return QStringList() << "IGT";
 }
 
 //-----------------------------------------------------------------------------

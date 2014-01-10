@@ -144,7 +144,7 @@ int qSlicerEndoscopeConsoleModuleWidget::CameraHandler()
             vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
             activeRenderer->SetLayer(1);
             
-            ViewerBackgroundOff(activeRenderer);
+            //ViewerBackgroundOff(activeRenderer);
             ViewerBackgroundOn(activeRenderer, this->VideoImageData);
         }
 
@@ -276,6 +276,8 @@ int qSlicerEndoscopeConsoleModuleWidget::StopCamera()
     
     ViewerBackgroundOff(activeRenderer);
     
+    return 1;
+    
 }
 
 //-----------------------------------------------------------------------------
@@ -297,10 +299,12 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOn(vtkRenderer* activeR
         this->BackgroundRenderer->SetLayer(0);
         this->BackgroundRenderer->AddActor(this->BackgroundActor);
         
-        this->BackgroundActor->Modified();
-        activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        this->BackgroundRenderer->GradientBackgroundOff();
+        this->BackgroundRenderer->SetBackground(0,0,0);
         
-        activeRenderer->Render();
+        this->BackgroundActor->Modified();
+        
+        activeRenderWindow->AddRenderer(this->BackgroundRenderer);
         
         // Adjust camera position so that image covers the draw area.
         vtkCamera* camera = this->BackgroundRenderer->GetActiveCamera();
@@ -341,15 +345,16 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOff(vtkRenderer* active
     
     if (activeRenderer)
     {
-        //activeRenderWindow->AddRenderer(this->BackgroundRenderer);
-        //activeRenderWindow->RemoveNthRenderer(1);
-        //activeRenderer->SetLayer(0);
-        //activeRenderer->AddActor(aSphere);
-        activeRenderer->Render();
+        // Slicer default background color
+        this->BackgroundRenderer->GradientBackgroundOn();
+        this->BackgroundRenderer->SetBackground(0.7568627450980392, 0.7647058823529412, 0.9098039215686275);
+        this->BackgroundRenderer->SetBackground2(0.4549019607843137, 0.4705882352941176, 0.7450980392156863);
         
-        
-        this->BackgroundRenderer = NULL;
+        this->BackgroundRenderer->RemoveActor(this->BackgroundActor);
+        this->BackgroundRenderer->GetRenderWindow()->Render();
+
         this->BackgroundActor = NULL;
+
     }
     
     return 0;
