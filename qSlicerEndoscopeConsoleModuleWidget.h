@@ -95,8 +95,6 @@ public:
   IplImage* undistortionImage;
   IplImage*     captureImage;
     
-  IplImage* bgr_frame;
-
   vtkImageData* VideoImageData;
   vtkRenderer*   BackgroundRenderer;
   vtkImageActor* BackgroundActor;

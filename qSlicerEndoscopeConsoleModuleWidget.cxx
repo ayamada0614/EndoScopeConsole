@@ -181,7 +181,7 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
         if( t->isActive())
             t->stop();
         this->timerFlag = 0;
-        t->start(100); // 1000 = 1s
+        t->start(50); // 1000 = 1s
         
         this->StartCamera(0, NULL);
 
