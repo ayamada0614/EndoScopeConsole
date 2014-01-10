@@ -43,6 +43,7 @@
 #include "vtkMRMLScalarVolumeDisplayNode.h"
 #include "vtkMRMLSliceNode.h"
 
+
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class qSlicerEndoscopeConsoleModuleWidgetPrivate: public Ui_qSlicerEndoscopeConsoleModuleWidget
@@ -99,8 +100,6 @@ void qSlicerEndoscopeConsoleModuleWidget::timerIntrupt()
     if(this->timerFlag == 1)
     {
         this->CameraHandler();
-        // test viewer
-        //cvShowImage( "Endoscope Viewer", this->RGBImage);
     }
     
 }
@@ -150,9 +149,8 @@ int qSlicerEndoscopeConsoleModuleWidget::CameraHandler()
         }
 
         // Display video image
-        //cvFlip(captureImageTmp, this->captureImage, 0);
-        //cvCvtColor( this->captureImage, this->RGBImage, CV_BGR2RGB);
-        cvCvtColor(captureImageTmp, this->RGBImage, CV_BGR2RGB);
+        cvFlip(captureImageTmp, this->captureImage, 0);
+        cvCvtColor( this->captureImage, this->RGBImage, CV_BGR2RGB);
 
         unsigned char* idata;
         idata = (unsigned char*) RGBImage->imageData;
@@ -164,15 +162,6 @@ int qSlicerEndoscopeConsoleModuleWidget::CameraHandler()
         {
             this->VideoImageData->Modified();
             this->BackgroundRenderer->GetRenderWindow()->Render();
-            
-            /*
-            qSlicerApplication *  app = qSlicerApplication::application();
-            qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
-            vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
-            activeRenderer->SetLayer(1);
-            activeRenderer->Render();
-            */
-            
         }
         
     }
@@ -247,11 +236,6 @@ int qSlicerEndoscopeConsoleModuleWidget::StartCamera(int channel, const char* pa
         return 0;
     }
 
-    // test viewer
-    //this->bgr_frame = NULL;
-    //this->bgr_frame = cvQueryFrame( this->capture );
-    //cvNamedWindow( "Endoscope Viewer", CV_WINDOW_NORMAL);
-
     this->timerFlag = 1;
     
     if (!this->VideoImageData)
@@ -309,30 +293,38 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOn(vtkRenderer* activeR
         this->BackgroundActor->SetInput(imageData);
 
         this->BackgroundRenderer = vtkRenderer::New();
-        this->BackgroundRenderer->AddActor(this->BackgroundActor);
         this->BackgroundRenderer->InteractiveOff();
         this->BackgroundRenderer->SetLayer(0);
+        this->BackgroundRenderer->AddActor(this->BackgroundActor);
         
         this->BackgroundActor->Modified();
         activeRenderWindow->AddRenderer(this->BackgroundRenderer);
+        
         activeRenderer->Render();
         
         // Adjust camera position so that image covers the draw area.
-        
         vtkCamera* camera = this->BackgroundRenderer->GetActiveCamera();
-        double x, y, z;
-        camera->GetPosition(x, y, z);
-        camera->SetViewAngle(90.0);
-        camera->SetPosition(x, y, y);
+        camera->ParallelProjectionOn();
         
-        // The following code fixes a issue that
-        // video doesn't show up on the viewer.
-        //vtkCamera* fcamera = rwidget->GetNthRenderer(0)->GetActiveCamera();
-        vtkCamera* fcamera = activeRenderer->GetActiveCamera();
-        if (fcamera)
-        {
-         fcamera->Modified();
-        }
+        // Set up the background camera to fill the renderer with the image
+        double origin[3];
+        double spacing[3];
+        int extent[6];
+        
+        imageData->GetOrigin( origin );
+        imageData->GetSpacing( spacing );
+        imageData->GetExtent( extent );
+        
+        double xc = origin[0] + 0.5*(extent[0] + extent[1])*spacing[0];
+        double yc = origin[1] + 0.5*(extent[2] + extent[3])*spacing[1];
+        double yd = (extent[3] - extent[2] + 1)*spacing[1];
+        double d = camera->GetDistance();
+        
+        camera->SetParallelScale(0.5*yd);
+        camera->SetFocalPoint(xc,yc,0.0);
+        camera->SetPosition(xc,yc,d);
+        
+        activeRenderWindow->Render();
         
     }
     
@@ -347,12 +339,12 @@ int qSlicerEndoscopeConsoleModuleWidget::ViewerBackgroundOff(vtkRenderer* active
     
     vtkRenderWindow* activeRenderWindow = activeRenderer->GetRenderWindow();
     
-    
     if (activeRenderer)
     {
         //activeRenderWindow->AddRenderer(this->BackgroundRenderer);
         //activeRenderWindow->RemoveNthRenderer(1);
         //activeRenderer->SetLayer(0);
+        //activeRenderer->AddActor(aSphere);
         activeRenderer->Render();
         
         

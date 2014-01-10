@@ -61,7 +61,6 @@
 #include <vtkProperty2D.h>
 #include <vtkActor2D.h>
 
-
 class qSlicerEndoscopeConsoleModuleWidgetPrivate;
 class vtkMRMLNode;
 class QTimer;
@@ -96,7 +95,7 @@ public:
   IplImage* undistortionImage;
   IplImage*     captureImage;
     
-    IplImage* bgr_frame;
+  IplImage* bgr_frame;
 
   vtkImageData* VideoImageData;
   vtkRenderer*   BackgroundRenderer;
