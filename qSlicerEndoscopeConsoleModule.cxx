@@ -78,7 +78,7 @@ QString qSlicerEndoscopeConsoleModule::acknowledgementText()const
 QStringList qSlicerEndoscopeConsoleModule::contributors()const
 {
   QStringList moduleContributors;
-  moduleContributors << QString("Atsushi Yamada (Shiga University of Medical Science) Junichi Tokuda (BWH) Laurent Chauvin (BWH)");
+  moduleContributors << QString("Atsushi Yamada (Shiga University of Medical Science) Junichi Tokuda (BWH) Laurent Chauvin (BWH) Kiyoyuki Chinzei (AIST) Nobuhiko Hata (BWH)");
   return moduleContributors;
 }
 
