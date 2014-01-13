@@ -99,8 +99,15 @@ public:
   vtkRenderer*   BackgroundRenderer;
   vtkImageActor* BackgroundActor;
     
+  int videoChannelNumber;
+  int videoImageFlipped;
+  int videoRefreshInterval;
+    
 public slots:
   void onVideoONToggled(bool checked);
+  void onVideoImageFlipONToggled(bool checked);
+  void onVideoChannelValueChanged(int channel);
+  void onVideoRefreshIntervalChanged(int interval);
   void timerIntrupt();
 
 protected:

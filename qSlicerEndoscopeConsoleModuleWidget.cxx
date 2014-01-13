@@ -33,6 +33,7 @@
 // qMRMLWidget includes
 #include "qMRMLThreeDView.h"
 #include "qMRMLThreeDWidget.h"
+#include "qMRMLSliderWidget.h"
 
 // Qt includes
 #include <QApplication>
@@ -84,11 +85,46 @@ void qSlicerEndoscopeConsoleModuleWidget::setup()
     
   connect(d->VideoON, SIGNAL(toggled(bool)),
           this, SLOT(onVideoONToggled(bool)));
+    
+  connect(d->VideoImageFlipON, SIGNAL(toggled(bool)),
+          this, SLOT(onVideoImageFlipONToggled(bool)));
 
+  connect(d->videoChannelNumberSpinBox, SIGNAL(valueChanged(int)),
+          this, SLOT(onVideoChannelValueChanged(int)));
+
+  connect(d->videoChannelNumberSpinBox, SIGNAL(valueChanged(int)),
+          d->videoChannelNumberSlider, SLOT(setValue(int)));
+
+  connect(d->videoChannelNumberSlider, SIGNAL(valueChanged(int)),
+          d->videoChannelNumberSpinBox, SLOT(setValue(int)));
+
+  connect(d->videoRefreshIntervalSpinBox, SIGNAL(valueChanged(int)),
+          this, SLOT(onVideoRefreshIntervalChanged(int)));
+    
+  connect(d->videoRefreshIntervalSpinBox, SIGNAL(valueChanged(int)),
+          d->videoRefreshIntervalSlider, SLOT(setValue(int)));
+    
+  connect(d->videoRefreshIntervalSlider, SIGNAL(valueChanged(int)),
+          d->videoRefreshIntervalSpinBox, SLOT(setValue(int)));
+    
+  d->videoChannelNumberSpinBox->setRange(0,10);
+  d->videoChannelNumberSlider->setRange(0,10);
+  d->videoChannelNumberSpinBox->setValue(0);
+    
+  d->videoRefreshIntervalSpinBox->setRange(1,1000);
+  d->videoRefreshIntervalSlider->setRange(1,1000);
+  d->videoRefreshIntervalSpinBox->setValue(50);
+    
   // QTimer setup
   t = new QTimer();
   this->timerFlag = 0;
   connect(t,SIGNAL(timeout()),this,SLOT(timerIntrupt()));
+  
+  this->videoImageFlipped = 1;
+  // default video channel number
+  this->videoChannelNumber = 0;
+  // default video refresh interval
+  this->videoRefreshInterval = 50; //(msec) 1000msec = 1s
     
 }
 
@@ -149,8 +185,13 @@ int qSlicerEndoscopeConsoleModuleWidget::CameraHandler()
         }
 
         // Display video image
-        cvFlip(captureImageTmp, this->captureImage, 0);
-        cvCvtColor( this->captureImage, this->RGBImage, CV_BGR2RGB);
+        if(this->videoImageFlipped == 1)
+        {
+            cvFlip(captureImageTmp, this->captureImage, 0);
+            cvCvtColor(this->captureImage, this->RGBImage, CV_BGR2RGB);
+        }else{
+            cvCvtColor(captureImageTmp, this->RGBImage, CV_BGR2RGB);
+        }
 
         unsigned char* idata;
         idata = (unsigned char*) RGBImage->imageData;
@@ -178,12 +219,14 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
     if(checked)
     {
         // QTimer start
+        
         if( t->isActive())
             t->stop();
         this->timerFlag = 0;
-        t->start(50); // 1000 = 1s
+        t->start(this->videoRefreshInterval);
         
-        this->StartCamera(0, NULL);
+        //this->StartCamera(0, NULL);
+        this->StartCamera(this->videoChannelNumber, NULL);
 
     }
     else
@@ -202,6 +245,38 @@ void qSlicerEndoscopeConsoleModuleWidget::onVideoONToggled(bool checked)
 }
 
 //-----------------------------------------------------------------------------
+void qSlicerEndoscopeConsoleModuleWidget::onVideoImageFlipONToggled(bool checked)
+{
+    Q_D(qSlicerEndoscopeConsoleModuleWidget);
+    
+    if(checked)
+    {
+        this->videoImageFlipped = 1;
+    }
+    else
+    {
+        this->videoImageFlipped = 0;
+    }
+    
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerEndoscopeConsoleModuleWidget::onVideoChannelValueChanged(int channel)
+{
+    Q_D(qSlicerEndoscopeConsoleModuleWidget);
+    
+    this->videoChannelNumber = channel;
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerEndoscopeConsoleModuleWidget::onVideoRefreshIntervalChanged(int interval)
+{
+    Q_D(qSlicerEndoscopeConsoleModuleWidget);
+    
+    this->videoRefreshInterval = interval;
+}
+
+//-----------------------------------------------------------------------------
 int qSlicerEndoscopeConsoleModuleWidget::StartCamera(int channel, const char* path)
 {
     // if channel = -1, OpenCV will read image from the video file specified by path
@@ -217,11 +292,6 @@ int qSlicerEndoscopeConsoleModuleWidget::StartCamera(int channel, const char* pa
     this->imageSize.height = 0;
     this->VideoImageData = NULL;
     
-    qSlicerApplication *  app = qSlicerApplication::application();
-    qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
-    vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
-    activeRenderer->SetLayer(1);
-    
     if (channel < 0 && path != NULL)
     {
         this->capture = cvCaptureFromAVI(path);
@@ -235,24 +305,31 @@ int qSlicerEndoscopeConsoleModuleWidget::StartCamera(int channel, const char* pa
     {
         return 0;
     }
-
-    this->timerFlag = 1;
-    
-    if (!this->VideoImageData)
+    else
     {
-        this->VideoImageData = vtkImageData::New();
-        this->VideoImageData->SetDimensions(64, 64, 1);
-        this->VideoImageData->SetExtent(0, 63, 0, 63, 0, 0 );
-        this->VideoImageData->SetSpacing(1.0, 1.0, 1.0);
-        this->VideoImageData->SetOrigin(0.0, 0.0, 0.0);
-        this->VideoImageData->SetNumberOfScalarComponents(3);
-        this->VideoImageData->SetScalarTypeToUnsignedChar();
-        this->VideoImageData->AllocateScalars();
-    }
-    this->VideoImageData->Update();
-    this->ViewerBackgroundOn(activeRenderer, this->VideoImageData);
+        qSlicerApplication *  app = qSlicerApplication::application();
+        qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
+        vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
+        activeRenderer->SetLayer(1);
+
+        this->timerFlag = 1;
     
-    return 1;
+        if (!this->VideoImageData)
+        {
+            this->VideoImageData = vtkImageData::New();
+            this->VideoImageData->SetDimensions(64, 64, 1);
+            this->VideoImageData->SetExtent(0, 63, 0, 63, 0, 0 );
+            this->VideoImageData->SetSpacing(1.0, 1.0, 1.0);
+            this->VideoImageData->SetOrigin(0.0, 0.0, 0.0);
+            this->VideoImageData->SetNumberOfScalarComponents(3);
+            this->VideoImageData->SetScalarTypeToUnsignedChar();
+            this->VideoImageData->AllocateScalars();
+        }
+            this->VideoImageData->Update();
+            this->ViewerBackgroundOn(activeRenderer, this->VideoImageData);
+    
+        return 1;
+    }
     
 }
 
@@ -265,16 +342,17 @@ int qSlicerEndoscopeConsoleModuleWidget::StopCamera()
     if(this->capture)
     {
         cvReleaseCapture(&this->capture);
-    }
-    if( t->isActive())
-        t->stop();
-
-    qSlicerApplication *  app = qSlicerApplication::application();
-    qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
-    vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
-    activeRenderer->SetLayer(1);
     
-    ViewerBackgroundOff(activeRenderer);
+        if( t->isActive())
+            t->stop();
+
+        qSlicerApplication *  app = qSlicerApplication::application();
+        qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
+        vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
+        activeRenderer->SetLayer(1);
+    
+        ViewerBackgroundOff(activeRenderer);
+    }
     
     return 1;
     
